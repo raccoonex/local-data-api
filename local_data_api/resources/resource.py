@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 import re
 import string
@@ -386,8 +387,8 @@ class Resource(ABC):
         sql: str,
         params: Optional[Dict[str, Any]] = None,
         include_result_metadata: bool = False,
+        format_records_as: str | None = None,
     ) -> ExecuteStatementResponse:
-
         try:
             cursor: Optional[Cursor] = None
             try:
@@ -398,17 +399,20 @@ class Resource(ABC):
                     cursor.execute(str(text(sql)))
 
                 if cursor.description:
-                    response: ExecuteStatementResponse = ExecuteStatementResponse(
-                        numberOfRecordsUpdated=0,
-                        records=[
-                            [self.get_field_from_value(column) for column in row]
-                            for row in cursor.fetchall()
-                        ],
-                    )
-                    if include_result_metadata:
-                        response.columnMetadata = self.create_column_metadata_set(
-                            cursor
+                    column_metadata_set = self.create_column_metadata_set(cursor)
+                    response = ExecuteStatementResponse(numberOfRecordsUpdated=0)
+
+                    if format_records_as == "JSON":
+                        records = self.create_json_records(cursor, column_metadata_set)
+                        response.formattedRecords = json.dumps(records)
+                    else:
+                        response.records = self.create_unformatted_records(
+                            cursor, column_metadata_set
                         )
+
+                    if include_result_metadata:
+                        response.columnMetadata = column_metadata_set
+
                     return response
                 else:
                     rowcount: int = cursor.rowcount
@@ -433,3 +437,15 @@ class Resource(ABC):
             elif len(getattr(e, 'args', [])) and e.args[0]:
                 message = str(e.args[0])
             raise BadRequestException(message)
+
+    @abstractmethod
+    def create_unformatted_records(self, cursor, column_metadata_set):
+        return [
+            [self.get_field_from_value(column) for column in row]
+            for row in cursor.fetchall()
+        ]
+
+    @abstractmethod
+    def create_json_records(self, cursor, column_metadata_set):
+        labels = [col_meta.label for col_meta in column_metadata_set]
+        return [dict(zip(labels, row)) for row in cursor.fetchall()]

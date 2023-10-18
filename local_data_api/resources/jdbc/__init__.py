@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from abc import ABC, abstractmethod
 from base64 import b64encode
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
@@ -124,6 +126,33 @@ class JDBC(Resource, ABC):
 
         return self.get_field_from_value(value)
 
+    def get_value_from_jdbc_type(self, value: Any, jdbc_type: Optional[int]) -> Field:
+        type_: Optional[JDBCType] = None
+        if jdbc_type:
+            try:
+                type_ = JDBCType(jdbc_type)
+            except ValueError:
+                pass
+        if type_:
+            if value is None:
+                return None
+            elif type_ in LONG:
+                return int(value)
+            elif type_ in DOUBLE:
+                return float(value)
+            elif type_ in STRING:
+                return str(value)
+            elif type_ in BOOLEAN:
+                return bool(value)
+            elif type_ in TIMESTAMP:
+                return self._format_datetime(value)
+            elif type_ in BLOB:
+                if isinstance(value, str):  # pragma: no cover
+                    value = value.encode()
+                return b64encode(value)
+
+        return value
+
     def create_column_metadata_set(
         self, cursor: jaydebeapi.Cursor
     ) -> List[ColumnMetadata]:
@@ -166,6 +195,7 @@ class JDBC(Resource, ABC):
         sql: str,
         params: Optional[Dict[str, Any]] = None,
         include_result_metadata: bool = False,
+        format_records_as: str | None = None,
     ) -> ExecuteStatementResponse:
         try:
             cursor: Optional[jaydebeapi.Cursor] = None
@@ -179,22 +209,19 @@ class JDBC(Resource, ABC):
                     cursor.execute(str(text(sql)))
                 if cursor.description:
                     column_metadata_set = self.create_column_metadata_set(cursor)
-                    response = ExecuteStatementResponse(
-                        numberOfRecordsUpdated=0,
-                        records=[
-                            [
-                                self.get_filed_from_jdbc_type(
-                                    column, column_metadata.type
-                                )
-                                for column, column_metadata in zip(
-                                    row, column_metadata_set
-                                )
-                            ]
-                            for row in cursor.fetchall()
-                        ],
-                    )
+                    response = ExecuteStatementResponse(numberOfRecordsUpdated=0)
+
+                    if format_records_as == "JSON":
+                        records = self.create_json_records(cursor, column_metadata_set)
+                        response.formattedRecords = json.dumps(records)
+                    else:
+                        response.records = self.create_unformatted_records(
+                            cursor, column_metadata_set
+                        )
+
                     if include_result_metadata:
                         response.columnMetadata = column_metadata_set
+
                     return response
                 else:
                     rowcount: int = cursor.rowcount
@@ -222,6 +249,25 @@ class JDBC(Resource, ABC):
                         message = e.args[0].args[0].cause.message
             raise BadRequestException(str(message))
 
+    def create_unformatted_records(self, cursor, column_metadata_set):
+        column_types = [col_meta.type for col_meta in column_metadata_set]
+        return [
+            [
+                self.get_filed_from_jdbc_type(column, column_type)
+                for column, column_type in zip(row, column_types)
+            ]
+            for row in cursor.fetchall()
+        ]
+
+    def create_json_records(self, cursor, column_metadata_set):
+        labels = [col_meta.label for col_meta in column_metadata_set]
+        types = [col_meta.type for col_meta in column_metadata_set]
+        rows = [self.pythonize_values(row, types) for row in cursor.fetchall()]
+        return [dict(zip(labels, row)) for row in rows]
+
+    def pythonize_values(self, values, types):
+        return [self.get_value_from_jdbc_type(v, t) for v, t in zip(values, types)]
+
     @classmethod
     def create_connection_maker(
         cls,
@@ -231,7 +277,6 @@ class JDBC(Resource, ABC):
         password: Optional[str] = None,
         engine_kwargs: Dict[str, Any] = None,
     ) -> ConnectionMaker:
-
         url: str = f'{cls.JDBC_NAME}://{host}:{port}/'
 
         if not engine_kwargs or 'JAR_PATH' not in engine_kwargs:

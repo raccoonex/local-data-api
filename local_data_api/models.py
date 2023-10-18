@@ -64,6 +64,7 @@ class ExecuteStatementRequests(BaseModel):
     parameters: Optional[List[SqlParameter]]
     schema_: Optional[str] = Field_(None, alias='schema')
     transactionId: Optional[str]
+    formatRecordsAs: Optional[str]
 
     @validator('transactionId', pre=True)
     def validate_transaction_id(cls, v: Any) -> Any:
@@ -94,6 +95,7 @@ class ExecuteStatementResponse(BaseModel):
     generatedFields: Optional[List[Field]]
     records: Optional[List[List[Field]]]
     columnMetadata: Optional[List[ColumnMetadata]]
+    formattedRecords: Optional[str]
 
 
 class BeginTransactionRequest(BaseModel):
