@@ -1,7 +1,7 @@
 # local-data-api - Local Data API for AWS Aurora Serverless Data API
 
 
-This is fork of **koxudaxi**'s [local-data-api](https://github.com/koxudaxi/local-data-api) with added support for formatting records as JSON using the `formatRecordsAs` parameter (see [rds-data documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds-data/client/execute_statement.html))/
+This is fork of **koxudaxi**'s [local-data-api](https://github.com/koxudaxi/local-data-api) with added support for formatting records as JSON using the `formatRecordsAs` parameter (see [rds-data documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds-data/client/execute_statement.html))
 
 Currently tested only with the PostgreSQL database.
 
@@ -28,7 +28,7 @@ Thanks to @ormu5.
 
 The easiest way to run data-api locally is to use this docker-compose configuration:
 
-```
+```yaml
 version: '3'
 services:
   local-data-api:
@@ -90,7 +90,7 @@ If a table has some records, then the local-data-api can run `select`
 In [2]: client.execute_statement(resourceArn='arn:aws:rds:us-east-1:123456789012:cluster:dummy', secretArn='arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy', sql='select * from users', database='test')
 ```
 ```python
-Out[3]: {'ResponseMetadata': {'HTTPStatusCode': 200,
+Out[2]: {'ResponseMetadata': {'HTTPStatusCode': 200,
  'HTTPHeaders': {'date': 'Sun, 09 Jun 2019 18:35:22 GMT',
  'server': 'uvicorn',
  'content-length': '492',
@@ -104,10 +104,10 @@ Out[3]: {'ResponseMetadata': {'HTTPStatusCode': 200,
 
 Or formatted as JSON
 ```python
-In [4]: client.execute_statement(resourceArn='arn:aws:rds:us-east-1:123456789012:cluster:dummy', secretArn='arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy', sql='select * from users', database='test', formatRecordsAs="JSON")
+In [3]: client.execute_statement(resourceArn='arn:aws:rds:us-east-1:123456789012:cluster:dummy', secretArn='arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy', sql='select * from users', database='test', formatRecordsAs="JSON")
 ```
 ```python
-Out[5]: {'ResponseMetadata': {'HTTPStatusCode': 200,
+Out[3]: {'ResponseMetadata': {'HTTPStatusCode': 200,
  'HTTPHeaders': {'date': 'Sun, 09 Jun 2019 18:35:22 GMT',
  'server': 'uvicorn',
  'content-length': '492',
