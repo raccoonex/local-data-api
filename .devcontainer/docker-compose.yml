@@ -1,0 +1,65 @@
+version: '3'
+services:
+  workspace:
+    image: mcr.microsoft.com/vscode/devcontainers/python:3.11-bullseye
+    environment:
+      DATA_API_URL: "http://127.0.0.1:8000"
+      AWS_ACCESS_KEY: aaa
+      AWS_SECRET_ACCESS_KEY: bbb
+      RDS_ARN: 'arn:aws:rds:us-east-1:123456789012:cluster:dummy'
+      RDS_SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy'
+      ENGINE: PostgreSQLJDBC
+      POSTGRES_HOST: "127.0.0.1"
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+
+    volumes:
+      # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
+      # mounts are relative to the first file in the list, which is a level up.
+      - ../.:/workspace:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    # network_mode: host
+
+  # local-data-api:
+  #   # image: koxudaxi/local-data-api
+  #   build: ../.
+  #   restart: unless-stopped
+  #   environment:
+  #     ENGINE: PostgreSQLJDBC
+  #     POSTGRES_HOST: db
+  #     POSTGRES_PORT: 5432
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: example
+  #     RESOURCE_ARN: 'arn:aws:rds:us-east-1:123456789012:cluster:dummy'
+  #     SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy'
+  #   ports:
+  #     - "8080:80"
+
+#   db:
+#     image: postgres:13-bullseye
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_PASSWORD: example
+#       POSTGRES_DB: skills
+#     ports:
+#         - "5432:5432"
+#     volumes: 
+#       - db:/var/lib/postgresql/data
+
+#   pg-admin:
+#     image: dpage/pgadmin4
+#     restart: unless-stopped
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
+#       PGADMIN_DEFAULT_PASSWORD: admin
+#     ports:
+#       - 5050:80
+#     volumes:
+#       - pgadmin-data:/var/lib/pgadmin
+
+# volumes:
+#   db:
+#   pgadmin-data:
