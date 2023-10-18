@@ -28,6 +28,11 @@ app = FastAPI()
 setup()
 
 
+@app.get("/ping")
+def ping():
+    return {"ping": "pong"}
+
+
 @app.post("/ExecuteSql")
 def execute_sql(request: ExecuteSqlRequest) -> None:
     raise NotImplementedError
@@ -100,6 +105,7 @@ def execute_statement(request: ExecuteStatementRequests) -> ExecuteStatementResp
             request.sql,
             parameters,
             include_result_metadata=request.includeResultMetadata,
+            format_records_as=request.formatRecordsAs,
         )
 
         if not resource.transaction_id:
