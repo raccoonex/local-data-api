@@ -1,7 +1,7 @@
 # local-data-api - Local Data API for AWS Aurora Serverless Data API
 
 
-This is fork of **koxudaxi**'s [local-data-api](https://github.com/koxudaxi/local-data-api) with added support for formatting records as JSON using the `formatRecordsAs` parameter (see [rds-data documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds-data/client/execute_statement.html))
+This is fork of **koxudaxi**'s [local-data-api](https://github.com/koxudaxi/local-data-api) with added support for formatting records as JSON using the `formatRecordsAs` parameter (see [rds-data documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds-data/client/execute_statement.html)).
 
 Currently tested only with the PostgreSQL database.
 
@@ -54,20 +54,22 @@ services:
     volumes: 
       - db:/var/lib/postgresql/data
 
-  pg-admin:
-    image: dpage/pgadmin4
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - 5050:80
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
+  # Optional - pgAdmin for DB administration
+  # pg-admin:
+  #   image: dpage/pgadmin4
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - 5050:80
+  #   volumes:
+  #     - pgadmin-data:/var/lib/pgadmin
 
 volumes:
   db:
-  pgadmin-data:
+  # Optional - pgAdmin for DB administration
+  # pgadmin-data:
 
 ```
 
