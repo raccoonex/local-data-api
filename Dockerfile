@@ -1,6 +1,6 @@
-FROM tiangolo/uvicorn-gunicorn:python3.8-slim
+FROM tiangolo/uvicorn-gunicorn:python3.11-slim
 
-LABEL maintainer="Koudai Aono <koxudaxi@gmail.com>"
+LABEL maintainer="https://github.com/raccoonex"
 
 ENV MODULE_NAME local_data_api.main
 ENV MARIADB_CLIENT_VERSION 2.5.0
@@ -12,10 +12,10 @@ ENV LD_LIBRARY_PATH /usr/lib/jvm/java-11-openjdk/jre/lib/amd64/server/
 ENV WEB_CONCURRENCY 1
 
 RUN  mkdir -p /usr/share/man/man1 \
-     && apt-get update && apt-get install -y openjdk-11-jre libpq-dev  \
+     && apt-get update && apt-get install -y default-jre libpq-dev  \
      && savedAptMark="$(apt-mark showmanual)" \
      && apt-get install -y gcc curl \
-     && pip install JPype1==1.2.0 psycopg2==2.8.5\
+     && pip install JPype1==1.4.1 psycopg2==2.9.9\
      && curl -o /usr/lib/jvm/mariadb-java-client.jar \
         https://downloads.mariadb.com/Connectors/java/connector-java-${MARIADB_CLIENT_VERSION}/mariadb-java-client-${MARIADB_CLIENT_VERSION}.jar \
      && curl -o /usr/lib/jvm/postgresql-java-client.jar \
